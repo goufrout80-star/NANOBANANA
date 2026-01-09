@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Face Swap AI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .gradient-bg { background: linear-gradient(135deg, #004e89 0%, #1a659e 100%); }
+        .glass-card { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); }
+        .template-card { transition: all 0.3s ease; border: 3px solid transparent; }
+        .template-card:hover { transform: translateY(-4px); box-shadow: 0 20px 40px rgba(0,0,0,0.15); }
+        .template-card.selected { border-color: #ff6b35; box-shadow: 0 0 0 4px rgba(255,107,53,0.3); }
+        .spinner { border: 3px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; width: 20px; height: 20px; animation: spin 0.8s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .fade-in { animation: fadeIn 0.5s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .upload-zone { border: 2px dashed #d1d5db; transition: all 0.3s ease; }
+        .upload-zone:hover, .upload-zone.dragover { border-color: #ff6b35; background: rgba(255,107,53,0.05); }
+        .upload-zone.has-image { border-style: solid; border-color: #f7c59f; }
+    </style>
+</head>
+<body class="min-h-screen gradient-bg">
+    <div class="container mx-auto px-4 py-8 max-w-6xl">
+        <!-- Header -->
+        <header class="text-center mb-10">
+            <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-white/20 backdrop-filter-sm mb-4">
+                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+            </div>
+            <h1 class="text-4xl font-bold text-white mb-2">Face Swap AI</h1>
+            <p class="text-white/80 text-lg">Transform yourself into any scene with AI magic</p>
+        </header>
+
+        <!-- Main Card -->
+        <div class="glass-card rounded-3xl shadow-2xl p-8 mb-8">
+            <div class="grid md:grid-cols-2 gap-8">
+                <!-- Left: Upload Your Photo -->
+                <div>
+                    <h2 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                        <span class="w-8 h-8 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center text-sm font-bold">1</span>
+                        Upload Your Photo
+                    </h2>
+                    <div id="uploadZone" class="upload-zone rounded-2xl p-8 text-center cursor-pointer min-h-[250px] flex flex-col items-center justify-center">
+                        <input type="file" id="userPhoto" accept="image/*" class="hidden">
+                        <div id="uploadPlaceholder">
+                            <svg class="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                            </svg>
+                            <p class="text-gray-600 font-medium">Drop your photo here</p>
+                            <p class="text-gray-400 text-sm mt-1">or click to browse</p>
+                        </div>
+                        <img id="userPreview" class="hidden max-h-[200px] rounded-xl object-contain">
+                    </div>
+                </div>
+
+                <!-- Right: Settings -->
+                <div>
+                    <h2 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                        <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                        </svg>
+                        Settings
+                    </h2>
+                    
+                    <!-- Image Size -->
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Image Size</label>
+                        <div class="flex gap-2">
+                            <button type="button" class="size-btn flex-1 py-2 px-4 rounded-lg border-2 border-orange-500 bg-orange-50 text-orange-700 font-medium" data-size="x1">x1 (Default)</button>
+                            <button type="button" class="size-btn flex-1 py-2 px-4 rounded-lg border-2 border-gray-200 text-gray-600 hover:border-orange-300" data-size="1k">1K</button>
+                            <button type="button" class="size-btn flex-1 py-2 px-4 rounded-lg border-2 border-gray-200 text-gray-600 hover:border-orange-300" data-size="2k">2K</button>
+                            <button type="button" class="size-btn flex-1 py-2 px-4 rounded-lg border-2 border-gray-200 text-gray-600 hover:border-orange-300" data-size="4k">4K</button>
+                        </div>
+                    </div>
+
+                    <!-- Aspect Ratio -->
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Aspect Ratio</label>
+                        <select id="aspectRatio" class="w-full py-2 px-4 rounded-lg border-2 border-gray-200 focus:border-orange-500 focus:ring-2 focus:ring-orange-200">
+                            <option value="">Auto (match template)</option>
+                            {% for ratio in aspect_ratios %}
+                            <option value="{{ ratio }}">{{ ratio }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Selected Template Preview -->
+                    <div id="selectedTemplateSection" class="hidden">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Selected Template</label>
+                        <div class="relative rounded-xl overflow-hidden bg-gray-100">
+                            <img id="selectedTemplatePreview" class="w-full h-32 object-cover">
+                            <button id="clearTemplate" class="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Template Gallery -->
+            <div class="mt-8">
+                <h2 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                    <span class="w-8 h-8 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center text-sm font-bold">2</span>
+                    Choose a Template
+                </h2>
+                
+                {% if templates %}
+                <div id="templateGallery" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                    {% for template in templates %}
+                    <div class="template-card rounded-xl overflow-hidden cursor-pointer bg-white shadow-md" data-template="{{ template.filename }}">
+                        <img src="{{ template.path }}" alt="Template" class="w-full h-32 object-cover">
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-12 bg-gray-50 rounded-2xl">
+                    <svg class="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                    </svg>
+                    <p class="text-gray-500">No templates available yet</p>
+                    <p class="text-gray-400 text-sm">Admin needs to upload templates first</p>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Generate Button -->
+            <button id="swapBtn" class="w-full mt-8 py-4 px-6 rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 text-white font-semibold text-lg hover:from-orange-600 hover:to-orange-700 transition-all transform hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-3 disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:scale-100">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                </svg>
+                <span id="btnText">Generate Face Swap</span>
+                <div id="btnSpinner" class="spinner hidden"></div>
+            </button>
+
+            <!-- Error Message -->
+            <div id="errorMsg" class="hidden mt-4 p-4 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm"></div>
+        </div>
+
+        <!-- Results Section -->
+        <div id="resultsSection" class="hidden glass-card rounded-3xl shadow-2xl p-8 mb-8 fade-in">
+            <h2 class="text-xl font-semibold text-gray-800 mb-6 flex items-center gap-2">
+                <svg class="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                Your Result
+            </h2>
+            <div id="resultImages" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
+        </div>
+
+        <!-- History Section -->
+        <div id="historySection" class="mt-10">
+            <h2 class="text-xl font-semibold text-white mb-4 flex items-center gap-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                Recent Generations
+            </h2>
+            <div id="historyGrid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"></div>
+            <p id="noHistory" class="text-white/60 text-center py-8">No images generated yet. Upload your photo and select a template to get started!</p>
+        </div>
+    </div>
+
+    <script>
+        let selectedTemplate = null;
+        let selectedSize = 'x1';
+        let userPhotoFile = null;
+        let generatedImages = [];
+
+        const uploadZone = document.getElementById('uploadZone');
+        const userPhotoInput = document.getElementById('userPhoto');
+        const userPreview = document.getElementById('userPreview');
+        const uploadPlaceholder = document.getElementById('uploadPlaceholder');
+        const swapBtn = document.getElementById('swapBtn');
+        const btnText = document.getElementById('btnText');
+        const btnSpinner = document.getElementById('btnSpinner');
+        const errorMsg = document.getElementById('errorMsg');
+        const resultsSection = document.getElementById('resultsSection');
+        const resultImages = document.getElementById('resultImages');
+        const historyGrid = document.getElementById('historyGrid');
+        const noHistory = document.getElementById('noHistory');
+        const selectedTemplateSection = document.getElementById('selectedTemplateSection');
+        const selectedTemplatePreview = document.getElementById('selectedTemplatePreview');
+
+        // Upload zone click
+        uploadZone.addEventListener('click', () => userPhotoInput.click());
+        
+        // Drag and drop
+        uploadZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadZone.classList.add('dragover');
+        });
+        uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('dragover'));
+        uploadZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadZone.classList.remove('dragover');
+            if (e.dataTransfer.files.length) {
+                handleFileSelect(e.dataTransfer.files[0]);
+            }
+        });
+
+        // File input change
+        userPhotoInput.addEventListener('change', (e) => {
+            if (e.target.files.length) {
+                handleFileSelect(e.target.files[0]);
+            }
+        });
+
+        function handleFileSelect(file) {
+            if (!file.type.startsWith('image/')) {
+                showError('Please select an image file');
+                return;
+            }
+            userPhotoFile = file;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                userPreview.src = e.target.result;
+                userPreview.classList.remove('hidden');
+                uploadPlaceholder.classList.add('hidden');
+                uploadZone.classList.add('has-image');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // Template selection
+        document.querySelectorAll('.template-card').forEach(card => {
+            card.addEventListener('click', () => {
+                document.querySelectorAll('.template-card').forEach(c => c.classList.remove('selected'));
+                card.classList.add('selected');
+                selectedTemplate = card.dataset.template;
+                
+                // Show selected template preview
+                const imgSrc = card.querySelector('img').src;
+                selectedTemplatePreview.src = imgSrc;
+                selectedTemplateSection.classList.remove('hidden');
+            });
+        });
+
+        // Clear template
+        document.getElementById('clearTemplate').addEventListener('click', () => {
+            selectedTemplate = null;
+            document.querySelectorAll('.template-card').forEach(c => c.classList.remove('selected'));
+            selectedTemplateSection.classList.add('hidden');
+        });
+
+        // Size buttons
+        document.querySelectorAll('.size-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.size-btn').forEach(b => {
+                    b.classList.remove('border-orange-500', 'bg-orange-50', 'text-orange-700');
+                    b.classList.add('border-gray-200', 'text-gray-600');
+                });
+                btn.classList.remove('border-gray-200', 'text-gray-600');
+                btn.classList.add('border-orange-500', 'bg-orange-50', 'text-orange-700');
+                selectedSize = btn.dataset.size;
+            });
+        });
+
+        // Generate button
+        swapBtn.addEventListener('click', async () => {
+            if (!userPhotoFile) {
+                showError('Please upload your photo first');
+                return;
+            }
+            if (!selectedTemplate) {
+                showError('Please select a template');
+                return;
+            }
+
+            setLoading(true);
+            hideError();
+
+            const formData = new FormData();
+            formData.append('user_photo', userPhotoFile);
+            formData.append('template_id', selectedTemplate);
+            formData.append('image_size', selectedSize);
+            formData.append('aspect_ratio', document.getElementById('aspectRatio').value);
+
+            try {
+                const response = await fetch('/swap', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Failed to generate');
+                }
+
+                displayResults(data);
+            } catch (error) {
+                showError(error.message);
+            } finally {
+                setLoading(false);
+            }
+        });
+
+        function setLoading(loading) {
+            swapBtn.disabled = loading;
+            btnText.textContent = loading ? 'Generating...' : 'Generate Face Swap';
+            btnSpinner.classList.toggle('hidden', !loading);
+        }
+
+        function showError(message) {
+            errorMsg.textContent = message;
+            errorMsg.classList.remove('hidden');
+        }
+
+        function hideError() {
+            errorMsg.classList.add('hidden');
+        }
+
+        function displayResults(data) {
+            resultsSection.classList.remove('hidden');
+            resultImages.innerHTML = '';
+
+            if (data.images && data.images.length > 0) {
+                data.images.forEach(imagePath => {
+                    const card = document.createElement('div');
+                    card.className = 'rounded-2xl overflow-hidden shadow-lg bg-white fade-in';
+                    card.innerHTML = `
+                        <div class="relative group">
+                            <img src="${imagePath}" alt="Result" class="w-full object-cover">
+                            <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
+                                <a href="${imagePath}" download class="p-3 bg-white rounded-full hover:bg-gray-100">
+                                    <svg class="w-5 h-5 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                                    </svg>
+                                </a>
+                                <a href="${imagePath}" target="_blank" class="p-3 bg-white rounded-full hover:bg-gray-100">
+                                    <svg class="w-5 h-5 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+                                    </svg>
+                                </a>
+                            </div>
+                        </div>
+                    `;
+                    resultImages.appendChild(card);
+
+                    // Add to history
+                    generatedImages.unshift(imagePath);
+                    addToHistory(imagePath);
+                });
+            }
+
+            updateHistoryVisibility();
+            resultsSection.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function addToHistory(imagePath) {
+            const card = document.createElement('div');
+            card.className = 'rounded-xl overflow-hidden shadow-lg cursor-pointer fade-in hover:scale-105 transition-transform';
+            card.innerHTML = `<img src="${imagePath}" alt="History" class="w-full h-32 object-cover">`;
+            card.addEventListener('click', () => window.open(imagePath, '_blank'));
+            
+            if (historyGrid.firstChild) {
+                historyGrid.insertBefore(card, historyGrid.firstChild);
+            } else {
+                historyGrid.appendChild(card);
+            }
+        }
+
+        function updateHistoryVisibility() {
+            noHistory.classList.toggle('hidden', generatedImages.length > 0);
+        }
+    </script>
+</body>
+</html>
