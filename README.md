@@ -1,36 +1,41 @@
-# Face Swap AI - Hostinger Deployment
+# Face Swap AI - Netlify Deployment
 
-## 🚀 Quick Deploy to Hostinger
+## 🚀 Quick Deploy to Netlify
 
-### 1. Upload Files
-- Upload all files in this folder to your Hostinger public_html directory
-- Make sure to preserve the folder structure
+### 1. Connect Repository
+- Push this code to your GitHub repository
+- Connect your GitHub repo to Netlify
 
-### 2. Environment Setup
-- Set up Python environment in Hostinger cPanel
-- Install required packages from `requirements.txt`
+### 2. Environment Variables
+Set these in Netlify dashboard > Site settings > Environment variables:
+- `GEMINI_API_KEY` - Your Google Gemini API key
+- `SECRET_KEY` - Random string for session security
 
-### 3. Environment Variables
-- Create a `.env` file with your `GEMINI_API_KEY`
-- Set `SECRET_KEY` for session management
+### 3. Build Settings
+Netlify will automatically detect the build settings from `netlify.toml`:
+- Build command: `echo 'Build complete'`
+- Publish directory: `static`
+- Functions directory: `netlify/functions`
 
-### 4. Configure App
-- Point your domain to the uploaded files
-- Set up Python application in Hostinger to run `wsgi.py`
+### 4. Deploy
+- Click "Deploy site" in Netlify
+- Your site will be live at `https://your-site-name.netlify.app`
 
 ## 📁 File Structure
 ```
-├── app.py              # Main Flask application
-├── wsgi.py             # WSGI entry point for Hostinger
-├── .htaccess           # Apache configuration
-├── requirements.txt    # Python dependencies
-├── .env               # Environment variables
-├── static/            # Static files (CSS, images, uploads)
-└── templates/         # HTML templates
+├── netlify.toml              # Netlify configuration
+├── package.json              # Node.js package info
+├── static/                   # Static files and templates
+├── netlify/functions/        # Serverless functions
+│   ├── generate.py          # Face swap API
+│   ├── admin-upload.py      # Template upload API
+│   └── admin-delete.py      # Template delete API
+├── templates/               # HTML templates (for reference)
+└── app.py                   # Original Flask app (for reference)
 ```
 
 ## 🔧 Admin Access
-- URL: `yourdomain.com/admin`
+- URL: `your-site.netlify.app/admin`
 - Username: `admin`
 - Password: `2`
 
@@ -43,4 +48,4 @@
 - Modern UI with custom color scheme
 
 ## 📞 Support
-For deployment issues, check Hostinger Python hosting documentation.
+For deployment issues, check Netlify documentation or contact support.

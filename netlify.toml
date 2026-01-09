@@ -1,0 +1,11 @@
+[build]
+  publish = "static"
+  command = "python -m http.server 8000"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 404
+
+[context.production.environment]
+  PYTHON_VERSION = "3.9"

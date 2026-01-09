@@ -1,0 +1,1 @@
+{"name":"face-swap-ai","version":"1.0.0","description":"Face Swap AI - Transform yourself into any scene with AI magic","scripts":{"build":"echo 'Build complete'","start":"python app.py"},"dependencies":{},"devDependencies":{}}
